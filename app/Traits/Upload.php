@@ -69,7 +69,7 @@ trait Upload
     {
         $filename = '';
         $disk = 'public';
-        if (Str::startsWith($value, 'data:image')) {
+        if (Str::startsWith($value, 'data:')) {
 
             $extension = self::checkBase64Extension($value);
 
@@ -83,7 +83,7 @@ trait Upload
                 UploadLib::thumbnail($image, $disk, $filename);
             }
         }
-        return $fileNameMain;
+        return $fileNameMain ?? '';
     }
 
     /**
@@ -312,9 +312,7 @@ trait Upload
             }
         }
         if ($useDefaultImage) {
-            return $urlFile ?? url("/storage".
-                config('const.filePath.default_image')
-            );
+            return $urlFile ?? url(config('const.filePath.default_image'));
         }
         return $urlFile;
     }

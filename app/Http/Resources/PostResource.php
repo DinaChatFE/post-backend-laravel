@@ -20,7 +20,7 @@ class PostResource extends JsonResource
          */
         $self = $this;
         return array_merge(parent::toArray($request), [
-            'user' => $this->whenLoaded('user'),
+            'user' => $this->whenLoaded('user', new UserResource($this->user)),
             'is_like' => $this->is_like,
             'created_at' => $self->created_at->diffForHumans(),
             'post_interactions' => $this->whenLoaded('postInteractions')

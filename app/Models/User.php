@@ -40,18 +40,6 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public static function boot()
-    {
-        parent::boot();
-
-        static::created(function($Object) {
-            $Object->username = Str::snake("$Object->name $Object->id");
-        });
-        static::updated(function($Object) {
-            $Object->username = Str::snake("$Object->name $Object->id");
-        });
-    }
-
     /**
      * The attributes that should be cast.
      *
@@ -81,6 +69,11 @@ class User extends Authenticatable
         return $this->getUrl($value);
     }
 
+    public function getIsFollowAttribute() : bool
+    {
+        return (bool) $this->follower()->where('user_id', auth()->id() ?? null)->count();
+    }
+    
     public function setProfileAttribute($value)
     {
         if (Str::startsWith($value,'data:')) {

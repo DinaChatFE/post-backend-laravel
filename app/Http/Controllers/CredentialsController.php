@@ -32,7 +32,7 @@ class CredentialsController extends Controller
      *
      * @param Request $request
      * @param string $grant_type
-     * @return void
+     * @return Response
      */
     public function issuePassport($request, $grant_type = 'password')
     {
@@ -72,7 +72,7 @@ class CredentialsController extends Controller
             return Response::json(['success' => [
                 'status' => 200,
                 'token_expired_at' => $token->expires_at,
-                'refresh_token_expire_at' => optional($refreshToken)->expires_at
+                'refresh_token_expire_at' => optional($refreshToken)->expires_at,
             ]]);
         };
         return Response::json('Something went wrong');
@@ -84,7 +84,12 @@ class CredentialsController extends Controller
      */
     public function login(LoginRequest $request)
     {
-        return $this->issuePassport($request);
+        $response = $this->issuePassport($request);
+        if ($response->getStatusCode() == 200) {
+            return Response::json(array_merge(json_decode($response->getContent(), true), 
+                ['user' => new UserResource(User::firstWhere('email', $request->email))]));
+        }
+        return $response;
     }
     /**
      * Register Controller
@@ -106,7 +111,7 @@ class CredentialsController extends Controller
             $token = Route::dispatch($requestLogin);
         }
         // changing code verification to make sure user has receive the code
-        return Response::json(["message" => "Register successfully", 'token' => json_decode($token->getContent()) ?? [] , 'data' => new UserResource($user)]);
+        return Response::json(["message" => "Register successfully", 'token' => json_decode($token->getContent()) ?? []]);
     }
 
     /**
@@ -131,7 +136,7 @@ class CredentialsController extends Controller
         foreach (Auth::user()->tokens as $t) {
             $t->revoke();
         }
-        $id  = app(JwtParser::class)->parse($token)->claims()->get('jti');
+        $id = app(JwtParser::class)->parse($token)->claims()->get('jti');
         $repo = app(RefreshTokenRepository::class);
         $repo->revokeRefreshTokensByAccessTokenId($id);
 
@@ -159,10 +164,10 @@ class CredentialsController extends Controller
         try {
             $request->validate([
                 'phone' => 'required|regex:/^[+-]?\d+$/|min:9|max:15',
-                'code' => 'required|min:6|max:10'
+                'code' => 'required|min:6|max:10',
             ]);
             $user = $this->findUserViaPhone($request->phone);
-            if (!$user) :
+            if (!$user):
                 throw new ModelNotFoundException('incorrect phone number');
             endif;
 

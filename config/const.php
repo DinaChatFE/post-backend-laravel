@@ -42,7 +42,7 @@ return [
         'large' => env('DO_SPACE_NAME', '') . '/uploads/files/large',
         'original' => env('DO_SPACE_NAME', '') . '/uploads/files/original',
 
-        'default_image' => '/uploads/files/default_image.png',
+        'default_image' => '/assets/default-placeholder.png',
         'default' => '/uploads/default/default.png',
     ],
     'search_syntax' => 'q',

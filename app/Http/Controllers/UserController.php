@@ -43,7 +43,7 @@ class UserController extends Controller
         $u = auth()->user();
 
         if ($u->id === $user->id) {
-            return response()->json(['message' => 'You cannot follow your self']);
+            return response()->json(['message' => 'You cannot follow your self'], 400);
         }
 
         if ($isFollow = $u->following()->where(['following_id' => $user->id])->first()) {

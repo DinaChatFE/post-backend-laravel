@@ -35,7 +35,7 @@ class PostController extends Controller
             ->where('user_id', '!=', auth()->id())
             ->orderBy('created_at', 'desc')
             // ->get()
-            ->paginate(20);
+            ->paginate(10);
 
         /*!Todo:
         * Accept when another post has both ref from following and post interactions
@@ -67,7 +67,16 @@ class PostController extends Controller
             }
         )->where('user_id', '!=' ,auth()->id());
 
-        $query = $query->latest()->paginate(20);
+        $query = $query->latest()->paginate(10);
+
+        return PostResource::collection($query);
+    }
+
+    public function getExplorePost()
+    {
+        $query = Post::with(['user'])->where('user_id', '!=' ,auth()->id());
+
+        $query = $query->latest()->paginate(10);
 
         return PostResource::collection($query);
     }
@@ -83,7 +92,7 @@ class PostController extends Controller
          * @var User
          */
         $user = auth()->user();
-        $posts = $user->posts()->with('user')->latest()->paginate(20);
+        $posts = $user->posts()->with('user')->latest()->paginate(10);
         return PostResource::collection($posts);
     }
 

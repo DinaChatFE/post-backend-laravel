@@ -42,6 +42,7 @@ Route::middleware('auth:api')->group(function () {
 
     Route::get('posts/my-posts', [PostController::class, 'getAllMyPosts']);
     Route::get('posts/post-following', [PostController::class, 'getFollowingPost']);
+    Route::get('posts/post-explore', [PostController::class, 'getExplorePost']);
     Route::post('post/like/{post}', [PostInteractionController::class, 'like']);
     Route::post('post/share/{post}', [PostInteractionController::class, 'share']);
 

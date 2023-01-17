@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
         DB::beginTransaction();
         try {
             $this->command->alert('Starting dumping data...');
-            $randomCount = 30;
+            $randomCount = 50;
             User::factory($randomCount)->create()->each(function ($user) use ($randomCount) {
                 $user->posts()->createMany(
                     Post::factory($randomCount * 2)->make()->toArray()

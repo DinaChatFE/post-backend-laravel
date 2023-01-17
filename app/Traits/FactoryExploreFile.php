@@ -18,7 +18,8 @@ trait FactoryExploreFile
     {
         $arr = [];
         foreach (array_filter(glob(public_path() . $path), 'is_file') as $file) {
-            $arr[] =  explode('public/storage', $file)[1] ?? $this->getDefaultImage();
+            $fileName = explode('public/storage', $file)[1] ?? $this->getDefaultImage();
+            $arr[] = $fileName;
         }
         return $arr[random_int(0, count($arr) - 1)];
     }

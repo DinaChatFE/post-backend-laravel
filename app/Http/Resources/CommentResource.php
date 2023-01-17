@@ -24,6 +24,7 @@ class CommentResource extends JsonResource
         return array_merge(parent::toArray($request), [
             'created_at' => $self->created_at->diffForHumans(),
             'updated_at' => $self->updated_at->diffForHumans(),
+            'user'      => $this->whenLoaded('user', new UserResource($this->user)),
             'children' => $this::collection($self->children)
         ]);
     }

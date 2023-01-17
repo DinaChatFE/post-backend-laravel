@@ -5,9 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use App\Http\Resources\PostResource;
-use App\Http\Resources\PostResourceCollections;
 use App\Models\Post;
-use App\Models\PostInteraction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -23,25 +21,19 @@ class PostController extends Controller
     public function index()
     {
 
-        $post = Post::with(['user', 'postInteractions'])->where(function ($q) {
-            $q->whereHas(
-                'user',
-                function ($query) {
-                    $query->whereHas('follower');
-                }
-            )->orWhereHas('postInteractions');
+        $followUser = auth()->user()->following()->pluck('users.id')->toArray();
+        $post = Post::with(['user', 'postInteractions'])->where(function ($q) use ($followUser) {
+            $q->whereIn('posts.user_id', $followUser)->orWhereHas('postInteractions');
         })
-
             ->where('user_id', '!=', auth()->id())
-            ->orderBy('created_at', 'desc')
-            // ->get()
+            ->inRandomOrder()
             ->paginate(10);
 
         /*!Todo:
-        * Accept when another post has both ref from following and post interactions
-        * Checking conditions if the post is from the following user no post interactions
-        * Currently is from post interactions
-        */
+         * Accept when another post has both ref from following and post interactions
+         * Checking conditions if the post is from the following user no post interactions
+         * Currently is from post interactions
+         */
 
         return PostResource::collection($post);
     }
@@ -65,18 +57,18 @@ class PostController extends Controller
             function ($query) {
                 $query->whereHas('follower');
             }
-        )->where('user_id', '!=' ,auth()->id());
+        )->where('user_id', '!=', auth()->id());
 
-        $query = $query->latest()->paginate(10);
+        $query = $query->inRandomOrder()->paginate(10);
 
         return PostResource::collection($query);
     }
 
     public function getExplorePost()
     {
-        $query = Post::with(['user'])->where('user_id', '!=' ,auth()->id());
+        $query = Post::with(['user'])->where('user_id', '!=', auth()->id());
 
-        $query = $query->latest()->paginate(10);
+        $query = $query->inRandomOrder()->paginate(10);
 
         return PostResource::collection($query);
     }
@@ -95,7 +87,6 @@ class PostController extends Controller
         $posts = $user->posts()->with('user')->latest()->paginate(10);
         return PostResource::collection($posts);
     }
-
 
     /**
      * Update the specified resource in storage.

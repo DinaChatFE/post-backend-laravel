@@ -23,11 +23,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
 Route::prefix('auth')->group(function () {
     Route::get('profile', [CredentialsController::class, 'profile'])->middleware('auth:api');
     Route::post('authority', [CredentialsController::class, 'authority']);
-    Route::post('logout', [CredentialsController::class, 'logout']);
+    Route::post('logout', [CredentialsController::class, 'logout'])->middleware('auth:api');
     Route::post('refresh', [CredentialsController::class, 'refresh']);
 });
 
@@ -47,7 +46,7 @@ Route::middleware('auth:api')->group(function () {
     Route::post('post/share/{post}', [PostInteractionController::class, 'share']);
 
     Route::apiResource('posts', PostController::class);
-    Route::apiResource('comment', CommentController::class);
+    Route::apiResource('posts/comment', CommentController::class);
 
     Route::post('user/follow/{user}', [UserController::class, 'follow']);
     Route::get('user/follower', [UserController::class, 'getFollower']);

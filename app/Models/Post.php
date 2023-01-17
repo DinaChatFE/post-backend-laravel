@@ -16,10 +16,10 @@ class Post extends Model
         'user_id',
         'title',
         'description',
-        'images'
+        'images',
     ];
     protected $casts = [
-        'images' => 'array'
+        'images' => 'array',
     ];
 
     public function user()
@@ -39,7 +39,10 @@ class Post extends Model
      */
     public function getIsLikeAttribute()
     {
-        return (bool) $this->postInteractions()->where('user_id', auth()->id())->where('post_id', $this->id)->where('type', 'like')->count();
+        return (bool) $this->postInteractions()->where('user_id', auth()->id())
+            ->where('post_id', $this->id)
+            ->where('type', 'like')
+            ->count();
     }
 
     public function postInteractions()
@@ -48,7 +51,10 @@ class Post extends Model
          * @var Model
          */
         $auth = auth()->user();
-        return $this->hasMany(PostInteraction::class, 'post_id')->whereIn('user_id', $auth->whereHas('follower')->pluck('id'));
+        return $this->hasMany(PostInteraction::class, 'post_id')
+            ->whereIn('user_id', $auth
+            ->whereHas('follower')
+            ->pluck('id'));
     }
 
     public function getImagesAttribute($value)
@@ -63,12 +69,12 @@ class Post extends Model
     public function setImagesAttribute($values)
     {
         try {
-            $getUploads = $this->base64Uploads($values);
+            $getUploads = $this->base64Uploads($values, true, true, true);
             $this->attributes['images'] = $getUploads;
             /* Upload for thumbnail, get the first one though */
             $this->attributes['thumbnail'] = json_decode($getUploads)[0] ?? null;
         } catch (Exception $error) {
-            throw new Error('File cannot upload, errors: ' + $error->getMessage());
+            throw new Error('File cannot upload, errors: '+$error->getMessage());
         }
     }
 }

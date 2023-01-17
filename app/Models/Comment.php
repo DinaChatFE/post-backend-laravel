@@ -27,6 +27,13 @@ class Comment extends Model
     {
         return $this->belongsTo(Post::class);
     }
+    /**
+     * get user
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Node traits

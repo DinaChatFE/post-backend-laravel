@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Client;
+use Laravel\Passport\Passport;
+use Laravel\Passport\TokenRepository;
 
 class CredentialsController extends Controller
 {
@@ -64,7 +66,7 @@ class CredentialsController extends Controller
         $request->headers->set('Authorization', request()->header('Authorization'));
 
         $response = Route::dispatch($request);
-        $token = DB::table('oauth_access_tokens')->where('user_id', auth()->user()->id)->latest()->first();
+        $token = DB::table('oauth_access_tokens')->where('user_id', auth()->id())->latest()->first();
 
         $refreshToken = DB::table('oauth_refresh_tokens')->whereId($token->id)->first();
 
@@ -86,7 +88,7 @@ class CredentialsController extends Controller
     {
         $response = $this->issuePassport($request);
         if ($response->getStatusCode() == 200) {
-            return Response::json(array_merge(json_decode($response->getContent(), true), 
+            return Response::json(array_merge(json_decode($response->getContent(), true),
                 ['user' => new UserResource(User::firstWhere('email', $request->email))]));
         }
         return $response;
@@ -111,7 +113,10 @@ class CredentialsController extends Controller
             $token = Route::dispatch($requestLogin);
         }
         // changing code verification to make sure user has receive the code
-        return Response::json(["message" => "Register successfully", 'token' => json_decode($token->getContent()) ?? []]);
+        return Response::json([
+            "message" => "Register successfully",
+            'token' => json_decode($token->getContent()) ?? [],
+        ]);
     }
 
     /**
@@ -132,15 +137,14 @@ class CredentialsController extends Controller
      */
     public function logout(Request $request)
     {
-        $token = $request->bearerToken();
-        foreach (Auth::user()->tokens as $t) {
-            $t->revoke();
+        $tokenId = $request->user()->token()->id;
+        $tokenRepository = app(TokenRepository::class);
+        $revoke = $tokenRepository->revokeAccessToken($tokenId);
+        if ($revoke) {
+            return Response::json(['message' => 'user successfully logout']);
         }
-        $id = app(JwtParser::class)->parse($token)->claims()->get('jti');
-        $repo = app(RefreshTokenRepository::class);
-        $repo->revokeRefreshTokensByAccessTokenId($id);
+        return Response::json(['message' => 'failed to revoke the token'], 500);
 
-        return Response::json(['message' => 'user successfully logout']);
     }
 
     /**

@@ -73,7 +73,7 @@ class User extends Authenticatable
     {
         return (bool) $this->follower()->where('user_id', auth()->id() ?? null)->count();
     }
-    
+
     public function setProfileAttribute($value)
     {
         if (Str::startsWith($value,'data:')) {

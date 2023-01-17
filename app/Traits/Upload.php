@@ -1,10 +1,10 @@
 <?php
 namespace App\Traits;
 
+use App\Lib\UploadLib;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Facades\Image;
-use Illuminate\Support\Facades\Storage;
-use App\Lib\UploadLib;
 
 trait Upload
 {
@@ -14,11 +14,12 @@ trait Upload
     | @param file $file
     | @return string
     |--------------------------------------------------------------------------
-    */
+     */
     public function singleUpload($attr, $request) // Taking input image as parameter
+
     {
         $filename = '';
-        if($request->hasFile($attr)){
+        if ($request->hasFile($attr)) {
             $file = $request->file($attr);
             if ($file->isValid()) {
                 $filename = self::generatFileName($file);
@@ -39,13 +40,14 @@ trait Upload
     | @param request $request
     | @return array
     |--------------------------------------------------------------------------
-    */
+     */
     public function multipleUploads($attr, $request) // Taking input image as parameter
+
     {
         $returnImages = [];
-        if($request->hasFile($attr) && is_array($request->file($attr))){
+        if ($request->hasFile($attr) && is_array($request->file($attr))) {
             $files = $request->file($attr);
-            foreach($files as $file){
+            foreach ($files as $file) {
                 if ($file->isValid()) {
                     $filename = self::generatFileName($file);
                     // CREATE THUMBNAIL
@@ -64,7 +66,7 @@ trait Upload
     | FOR API BASE64 UPLOAD
     | @return string
     |--------------------------------------------------------------------------
-    */
+     */
     public function base64Upload($value, $thumbnail = true, $mainImage = true)
     {
         $filename = '';
@@ -93,24 +95,28 @@ trait Upload
      * @param boolean $thumbnail
      * @param boolean $mainImage
      */
-    public function base64Uploads($values, $thumbnail = true, $mainImage = true)
+    public function base64Uploads($values, $thumbnail = true, $mainImage = true, $forceInput = false)
     {
         $fileNameMainArray = [];
         $disk = 'public';
-        if(!empty($values) && is_array($values)){
-            foreach($values as $key => $value){
+        if (!empty($values) && is_array($values)) {
+            foreach ($values as $key => $value) {
                 // checking if it's base64 format
                 if (Str::startsWith($value, 'data:image')) {
                     $extension = self::checkBase64Extension($value);
                     $image = Image::make($value);
                     $filename = md5($value . time()) . $extension;
                     if ($mainImage) {
-                        $fileNameMain = config('const.filePath.original')  . '/'. $filename;
+                        $fileNameMain = config('const.filePath.original') . '/' . $filename;
                         Storage::disk($disk)->put($fileNameMain, $image->stream());
                         $fileNameMainArray[] = $fileNameMain;
                     }
                     if ($thumbnail) {
                         UploadLib::thumbnail($image, $disk, $filename);
+                    }
+                } else {
+                    if ($forceInput) {
+                        $fileNameMainArray[] = $value;
                     }
                 }
             }
@@ -123,16 +129,16 @@ trait Upload
     | GET IMAGE UPLOAD
     | @return string
     |--------------------------------------------------------------------------
-    */
+     */
     public function getUploadImage($image, $size = 'medium')
     {
         $returnImage = '';
         // RETURN DEFUALT IMAGE
-        if(empty($image)):
+        if (empty($image)):
             $returnImage = config('const.filePath.default');
         else:
             $extension = self::getStringAfterLastDot($image);
-            if(self::checkImageExtension($extension)):
+            if (self::checkImageExtension($extension)):
                 $returnImage = self::switchImageSize($image, $size);
             else:
                 $returnImage = self::switchImageSize($image, 'original');
@@ -155,65 +161,65 @@ trait Upload
         return url('/public' . $images);
     }
 
-    static function switchImageSize($images, $size = 'medium')
+    public static function switchImageSize($images, $size = 'medium')
     {
-        switch($size){
+        switch ($size) {
             case 'small':
-                return  config('const.filePath.small').$images;
-            break;
+                return config('const.filePath.small') . $images;
+                break;
 
             case 'medium':
-                return  config('const.filePath.medium').$images;
-            break;
+                return config('const.filePath.medium') . $images;
+                break;
 
             case 'large':
-                return  config('const.filePath.large').$images;
-            break;
+                return config('const.filePath.large') . $images;
+                break;
 
-            default :
-                return  config('const.filePath.original').$images;
-            break;
+            default:
+                return config('const.filePath.original') . $images;
+                break;
         }
     }
 
-    static function createThumbnail($file, $filename)
+    public static function createThumbnail($file, $filename)
     {
-        if(self::checkImageExtension($file->getClientOriginalExtension())):
-            self::uploadThumbnail($file, config('const.filePath.small').$filename, 150, 93);
-            self::uploadThumbnail($file, config('const.filePath.medium').$filename, 300, 185);
-            self::uploadThumbnail($file, config('const.filePath.large').$filename, 550, 340);
+        if (self::checkImageExtension($file->getClientOriginalExtension())):
+            self::uploadThumbnail($file, config('const.filePath.small') . $filename, 150, 93);
+            self::uploadThumbnail($file, config('const.filePath.medium') . $filename, 300, 185);
+            self::uploadThumbnail($file, config('const.filePath.large') . $filename, 550, 340);
         endif;
     }
 
-    static function uploadThumbnail($file, $path, $width, $heigh)
+    public static function uploadThumbnail($file, $path, $width, $heigh)
     {
 
         Image::make($file->getRealPath())->resize($width, $heigh,
             function ($constraint) {
                 $constraint->aspectRatio();
             })
-        ->save(public_path().'/'.$path);
+            ->save(public_path() . '/' . $path);
     }
 
-    static function generatFileName($file)
+    public static function generatFileName($file)
     {
-        if(!empty($file)):
+        if (!empty($file)):
             return md5($file->getClientOriginalName() . random_int(1, 9999) . time()) . '.' . $file->getClientOriginalExtension();
         endif;
         return null;
     }
 
-    static function getStringAfterLastDot($string)
+    public static function getStringAfterLastDot($string)
     {
-        if(!empty($string)):
+        if (!empty($string)):
             return substr(strrchr($string, '.'), 1);
         endif;
         return null;
     }
 
-    static function checkImageExtension($extension)
+    public static function checkImageExtension($extension)
     {
-        if(!empty($extension) && in_array($extension, ['jpg', 'jpeg', 'jfif', 'pjpeg', 'pjp', 'png', 'ico', 'cur'])):
+        if (!empty($extension) && in_array($extension, ['jpg', 'jpeg', 'jfif', 'pjpeg', 'pjp', 'png', 'ico', 'cur'])):
             return true;
         endif;
         return false;
@@ -225,12 +231,12 @@ trait Upload
      * @param string $value
      * @return string
      */
-    static function checkBase64Extension($value)
+    public static function checkBase64Extension($value)
     {
         $all_extensions = [
             'jpg', 'png', 'jpeg', 'pdf', 'docx', 'docm', 'dotx', 'dotm',
             'xlsx', 'xlsm', 'xltx', 'xltm', 'xlsb', 'xlam', 'pptx', 'pptm',
-            'potx', 'potm', 'ppam', 'ppsx', 'ppsm', 'sldx', 'sldm', 'thmx'
+            'potx', 'potm', 'ppam', 'ppsx', 'ppsm', 'sldx', 'sldm', 'thmx',
         ];
         $extension = explode(";", explode("/", $value)[1])[0];
         if (in_array($extension, $all_extensions)) {
@@ -242,24 +248,24 @@ trait Upload
     public function deleteFile($file)
     {
 
-        $small = public_path().config('const.filePath.small').$file;
-        $medium = public_path().config('const.filePath.medium').$file;
-        $large = public_path().config('const.filePath.large').$file;
-        $original = public_path().config('const.filePath.original').$file;
+        $small = public_path() . config('const.filePath.small') . $file;
+        $medium = public_path() . config('const.filePath.medium') . $file;
+        $large = public_path() . config('const.filePath.large') . $file;
+        $original = public_path() . config('const.filePath.original') . $file;
 
-        if(file_exists($small)):
+        if (file_exists($small)):
             @unlink($small);
         endif;
 
-        if(file_exists($medium)):
+        if (file_exists($medium)):
             @unlink($medium);
         endif;
 
-        if(file_exists($large)):
+        if (file_exists($large)):
             @unlink($large);
         endif;
 
-        if(file_exists($original)):
+        if (file_exists($original)):
             @unlink($original);
         endif;
     }
@@ -275,7 +281,7 @@ trait Upload
                 }
             }
         }
-        return implode(",",$g);
+        return implode(",", $g);
     }
 
     /**
@@ -305,11 +311,7 @@ trait Upload
     public static function getUrl($file, $disk = 'public', $useDefaultImage = true)
     {
         if ($file) {
-            if (env('APP_ENV') === 'local') {
-                $urlFile = url("/storage".$file);
-            } else {
-                $urlFile = \Storage::disk($disk)->url($file);
-            }
+            $urlFile = \Storage::disk($disk)->url(Str::replaceFirst(env('APP_URL') . '/storage', '', $file));
         }
         if ($useDefaultImage) {
             return $urlFile ?? url(config('const.filePath.default_image'));

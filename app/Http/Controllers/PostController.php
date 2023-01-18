@@ -27,7 +27,7 @@ class PostController extends Controller
         })
             ->where('user_id', '!=', auth()->id())
             ->inRandomOrder()
-            ->paginate(10);
+            ->paginate(config('const.pagination.length'));
 
         /*!Todo:
          * Accept when another post has both ref from following and post interactions
@@ -59,7 +59,7 @@ class PostController extends Controller
             }
         )->where('user_id', '!=', auth()->id());
 
-        $query = $query->inRandomOrder()->paginate(10);
+        $query = $query->inRandomOrder()->paginate(config('const.pagination.length'));
 
         return PostResource::collection($query);
     }
@@ -68,7 +68,7 @@ class PostController extends Controller
     {
         $query = Post::with(['user'])->where('user_id', '!=', auth()->id());
 
-        $query = $query->inRandomOrder()->paginate(10);
+        $query = $query->inRandomOrder()->paginate(config('const.pagination.length'));
 
         return PostResource::collection($query);
     }
@@ -84,7 +84,7 @@ class PostController extends Controller
          * @var User
          */
         $user = auth()->user();
-        $posts = $user->posts()->with('user')->latest()->paginate(10);
+        $posts = $user->posts()->with('user')->latest()->paginate(config('const.pagination.length'));
         return PostResource::collection($posts);
     }
 

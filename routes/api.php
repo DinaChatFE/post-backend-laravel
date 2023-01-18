@@ -45,8 +45,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('post/like/{post}', [PostInteractionController::class, 'like']);
     Route::post('post/share/{post}', [PostInteractionController::class, 'share']);
 
-    Route::apiResource('posts', PostController::class);
     Route::apiResource('posts/comment', CommentController::class);
+    Route::apiResource('posts', PostController::class);
 
     Route::post('user/follow/{user}', [UserController::class, 'follow']);
     Route::get('user/follower', [UserController::class, 'getFollower']);

@@ -22,7 +22,8 @@ class CommentController extends Controller
         $byParentId = $request->query('parent_id');
         $postId = $request->query('post_id');
         if ($postId) {
-            $treeComment = Comment::with('user')->where(['post_id' => $postId])
+            $treeComment = Comment::with('user')->withDepth()
+                ->where(['post_id' => $postId])
                 ->where('parent_id', $byParentId ?? null)
                 ->orderBy('created_at', 'desc')->paginate(3)->toTree()->reverse();
         }
@@ -51,9 +52,10 @@ class CommentController extends Controller
         if (!$comment) {
             return Response::json(['message' => 'Your comment didn\'t appeared to have'], 500);
         }
+        $comment = Comment::with('user')->withDepth()->find($comment->id);
         return Response::json([
             'message' => 'You been comment on post : "' . $request->text . '"',
-            'data' => new CommentResource($comment->load('user')),
+            'data' => new CommentResource($comment),
         ]);
     }
 

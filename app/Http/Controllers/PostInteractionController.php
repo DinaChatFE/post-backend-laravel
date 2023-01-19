@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use App\Models\PostInteraction;
-use Illuminate\Http\Request;
 
 class PostInteractionController extends Controller
 {
@@ -18,7 +17,7 @@ class PostInteractionController extends Controller
             PostInteraction::create($map);
         }
 
-        return response()->json(['message' => 'Successfully ' . (!$isLike ? 'like' : 'remove like') . ' the post']);
+        return response()->json(['message' => 'Successfully ' . (!$isLike ? 'like' : 'dislike') . ' the post']);
     }
 
     public function share(Post $post)
@@ -31,6 +30,7 @@ class PostInteractionController extends Controller
             PostInteraction::create($map);
         }
 
-        return response()->json(['message' => 'Successfully ' . ($isShare ? 'share' : 'delete the share') . ' of the post']);
+        return response()->json([
+            'message' => 'Successfully ' . ($isShare ? 'share' : 'delete the share') . ' of the post']);
     }
 }
